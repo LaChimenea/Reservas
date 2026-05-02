@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Reservas · Bar</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#111210;--s1:#1c1b19;--s2:#252420;
+  --border:#333230;--gold:#c8a84b;--gold-bg:#1d190c;--gold-dim:#6b5a28;
+  --text:#ede9e0;--mid:#9a9690;--dim:#585650;
+  --green:#4caf7d;--green-bg:#0c1d14;--green-border:#1a4a2a;
+  --red:#e05a4a;--red-bg:#1e0d0a;--red-border:#5a1a10;
+  --amber:#e8a030;--amber-bg:#1e1508;
+  --blue:#5a9fe0;--blue-bg:#0b1620;
+  --purple:#a07de0;--purple-bg:#150f20;
+  --r:12px;--rsm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);max-width:440px;margin:0 auto;padding-bottom:76px;min-height:100vh}
+.hdr{background:var(--s1);border-bottom:1px solid var(--border);padding:13px 16px 11px;position:sticky;top:0;z-index:100}
+.hdr-row{display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Playfair Display',serif;font-size:19px;color:var(--gold)}
+.live{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:bl 2s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+.hdr-date{font-size:11px;color:var(--dim);margin-top:2px;letter-spacing:.05em;text-transform:uppercase}
+.tabs{display:flex;background:var(--s1);border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:99}
+.tab{flex:1;padding:10px 4px;text-align:center;font-size:11px;font-weight:500;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:.05em;text-transform:uppercase}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold)}
+.bdg{display:inline-block;background:var(--gold-bg);color:var(--gold);border-radius:10px;font-size:10px;padding:1px 5px;margin-left:3px;font-weight:600}
+.view{display:none;padding:13px 13px 0}.view.on{display:block}
+.stitle{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:9px}
+
+/* TURNO */
+.turno{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
+.turno-hdr{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.t-hora{font-family:'Playfair Display',serif;font-size:24px;letter-spacing:-.02em}
+.t-hora small{font-family:'Outfit',sans-serif;font-size:11px;color:var(--mid);margin-left:3px}
+.t-right{text-align:right}
+.pill{display:inline-block;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.p-open{background:var(--green-bg);color:var(--green)}
+.p-wait{background:var(--amber-bg);color:var(--amber)}
+.p-closed{background:var(--s2);color:var(--dim)}
+.p-urgent{background:#2a1008;color:#ff8020;animation:urgpulse 1s infinite}
+@keyframes urgpulse{0%,100%{opacity:1}50%{opacity:.6}}
+.cd{font-size:11px;color:var(--dim);margin-top:3px}
+.cd.urgent{color:var(--amber)}.cd.exp{color:var(--red)}.cd.critical{color:#ff8020;font-weight:600}
+
+/* RESERVA ITEMS */
+.rlist{padding:0 14px 10px}
+.ritem{display:flex;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);gap:10px;transition:background .2s}
+.ritem:last-child{border-bottom:none}
+/* Estados visuales por item */
+.ritem.st-pendiente{border-left:3px solid var(--gold);padding-left:8px}
+.ritem.st-llegado{border-left:3px solid var(--green);padding-left:8px}
+.ritem.st-urgente{border-left:3px solid #ff8020;padding-left:8px;background:rgba(255,128,32,.04)}
+.ritem.st-caducada{border-left:3px solid var(--red);padding-left:8px;opacity:.6}
+
+.rnum{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;margin-top:1px}
+.st-pendiente .rnum{background:var(--gold-bg);color:var(--gold)}
+.st-llegado   .rnum{background:var(--green-bg);color:var(--green)}
+.st-urgente   .rnum{background:#2a1008;color:#ff8020}
+.st-caducada  .rnum{background:var(--red-bg);color:var(--red)}
+
+.rinfo{flex:1;min-width:0}
+.rname{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-llegado .rname{color:var(--green)}
+.st-caducada .rname{color:#888580;text-decoration:line-through;text-decoration-color:#666}
+.rmeta{font-size:13px;color:var(--mid);margin-top:3px;font-weight:500}
+.restado{font-size:11px;margin-top:3px;font-weight:600}
+.st-pendiente .restado{color:var(--gold)}
+.st-llegado   .restado{color:var(--green)}
+.st-urgente   .restado{color:#ff8020}
+.st-caducada  .restado{color:#e08050}
+.rzona{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.ztag{background:var(--blue-bg);color:#7ab8e8;border-radius:5px;font-size:11px;padding:3px 8px;font-weight:600;border:1px solid #1a3a5a}
+.ztag.m{background:var(--purple-bg);color:#b89ae8;border:1px solid #2a1a5a}
+.racts{display:flex;gap:5px;flex-shrink:0}
+.bico{width:32px;height:32px;border-radius:var(--rsm);border:1px solid var(--border);background:var(--s2);color:var(--mid);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .15s}
+.bico:active{transform:scale(.9)}
+.bico.ok{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+.bico.del{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+.bico.done{border-color:var(--green);color:var(--green);background:var(--green-bg);opacity:.5}
+.bico.mover{border-color:var(--amber);color:var(--amber);background:var(--amber-bg)}
+.bico.edit{border-color:#4a7a9a;color:#6aaaca;background:#0a1820;font-size:16px}
+
+/* Sub-tabs hoy / próximas */
+.subtab{flex:1;padding:9px;border-radius:var(--rsm);border:1px solid var(--border);background:var(--s2);color:var(--dim);font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s}
+.subtab.on{background:var(--gold-bg);border-color:var(--gold-dim);color:var(--gold)}
+
+/* Grupo fecha en próximas */
+.fecha-grupo{margin-bottom:14px}
+.fecha-grupo-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.fecha-grupo-label{font-size:12px;font-weight:600;color:var(--text)}
+.fecha-grupo-count{font-size:11px;color:var(--dim)}
+.fecha-grupo-turno{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:6px}
+.fecha-grupo-turno-hdr{padding:8px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--mid);display:flex;align-items:center;gap:6px}
+
+.empty{text-align:center;padding:18px;color:var(--dim);font-size:12px}
+.add-row{padding:8px 14px 13px;border-top:1px solid var(--border)}
+.btnadd{width:100%;padding:10px;border-radius:var(--rsm);border:1px dashed var(--border);background:transparent;color:var(--gold);font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.btnadd:active{background:var(--s2)}
+
+/* ALERTA BANNER */
+.alerta-banner{background:#2a1008;border:1px solid #8a4010;border-radius:var(--rsm);padding:10px 12px;margin:0 14px 8px;font-size:12px;color:#ff8020;display:flex;align-items:center;gap:8px;animation:urgpulse 1.5s infinite}
+.alerta-banner button{margin-left:auto;background:#8a4010;border:none;color:#ffb060;border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Outfit',sans-serif}
+
+/* MAPA */
+.mapa-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:12px}
+.mapa-title{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+.zc{cursor:pointer}
+.zc rect{transition:fill .15s,stroke .15s}
+.zc.libre    rect{fill:#0e1820;stroke:#2a4a6a;stroke-width:1}   .zc.libre    text{fill:#4a8ec8}
+.zc.ocupada  rect{fill:#1d1608;stroke:#8a6020;stroke-width:1.5} .zc.ocupada  text{fill:#c8a84b}
+.zc.bloqueada rect{fill:#1a0e0b;stroke:#6a2a20;stroke-width:1}  .zc.bloqueada text{fill:#6a3020}
+.zc.nores    rect{fill:#161514;stroke:#252422;stroke-width:1}    .zc.nores    text{fill:#3a3836}
+.zc.espwait  rect{fill:#150f20;stroke:#5a40a0;stroke-width:1}   .zc.espwait  text{fill:#8060c0}
+.mapa-leg{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mid)}
+.ldot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* LISTA ESPERA */
+.eitem{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:12px 13px;margin-bottom:8px}
+.eitem-top{display:flex;align-items:center;gap:10px}
+.enum{width:36px;height:36px;border-radius:var(--rsm);background:var(--gold-bg);border:1px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);font-weight:600;flex-shrink:0}
+.einfo{flex:1}
+.ename{font-size:14px;font-weight:500}
+.emeta{font-size:11px;color:var(--mid);margin-top:2px}
+.ecomentario{font-size:11px;color:var(--gold);margin-top:4px;font-style:italic}
+.eacts{display:flex;gap:5px;flex-shrink:0}
+.ename-row{display:flex;align-items:baseline;gap:8px}
+.epax{font-size:14px;font-weight:600;color:var(--gold);white-space:nowrap}
+
+/* Número de cuenta */
+.ecuenta-row{display:flex;align-items:center;gap:7px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.ecuenta-label{font-size:10px;color:var(--dim);white-space:nowrap;font-weight:500;letter-spacing:.05em;text-transform:uppercase}
+.ecuenta-input{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--gold);font-family:'Playfair Display',serif;font-size:14px;padding:5px 9px;outline:none;width:100%;transition:border-color .2s}
+.ecuenta-input:focus{border-color:var(--gold-dim)}
+.ecuenta-input::placeholder{color:var(--dim);font-family:'Outfit',sans-serif;font-size:12px}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.stat{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center}
+.stat-n{font-family:'Playfair Display',serif;font-size:26px;color:var(--gold);line-height:1}
+.stat-l{font-size:10px;color:var(--dim);margin-top:3px}
+.info-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:14px;font-size:12px;color:var(--mid);line-height:1.85}
+.info-card strong{color:var(--text)}
+
+/* LEYENDA COLORES */
+.color-legend{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:12px}
+.cl-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px}
+.cl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.cl-label{color:var(--mid)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:flex;align-items:flex-end;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.on{opacity:1;pointer-events:all}
+.modal{background:var(--s1);border-radius:var(--r) var(--r) 0 0;border-top:1px solid var(--border);width:100%;max-width:440px;margin:0 auto;padding:18px 18px 38px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:92vh;overflow-y:auto}
+.overlay.on .modal{transform:translateY(0)}
+.mhandle{width:32px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.mtitle{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:16px}
+.flabel{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:5px;display:block}
+.finput{width:100%;padding:11px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;margin-bottom:12px;outline:none;transition:border-color .2s}
+.finput:focus{border-color:var(--gold)}
+select.finput{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath fill='%235a5850' d='M5 7L1 3h8z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.frow{display:flex;gap:10px}.frow .fg{flex:1}
+.tsel{display:flex;gap:8px;margin-bottom:14px}
+.topt{flex:1;padding:11px 8px;border-radius:var(--rsm);border:1px solid var(--border);background:var(--s2);color:var(--mid);text-align:center;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s}
+.topt.on{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+.sug-box{background:var(--blue-bg);border:1px solid #1a3a5a;border-radius:var(--rsm);padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--blue);display:none}
+.zona-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;max-height:200px;overflow-y:auto}
+.zopt{padding:9px 10px;border-radius:var(--rsm);border:1px solid var(--border);background:var(--s2);cursor:pointer;transition:all .15s}
+.zopt.on{border-color:var(--green);background:var(--green-bg)}
+.zopt.bloq{opacity:.35;pointer-events:none}
+.zopt-name{font-size:12px;font-weight:500;color:var(--text)}.zopt.on .zopt-name{color:var(--green)}
+.zopt-cap{font-size:10px;color:var(--dim);margin-top:2px}
+
+/* Preferencia espera */
+.pref-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.pref-opt{padding:10px;border-radius:var(--rsm);border:1px solid var(--border);background:var(--s2);cursor:pointer;text-align:center;font-size:12px;color:var(--mid);transition:all .15s}
+.pref-opt.on{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+
+.btnprim{width:100%;padding:13px;background:var(--gold);color:#0f0e0a;border:none;border-radius:var(--rsm);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+.btnprim:active{transform:scale(.97);opacity:.9}
+.btnsec{width:100%;padding:11px;background:transparent;color:var(--mid);border:1px solid var(--border);border-radius:var(--rsm);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;margin-top:7px}
+.toast{position:fixed;top:75px;left:50%;transform:translateX(-50%) translateY(-8px);background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);padding:9px 16px;font-size:12px;color:var(--text);z-index:300;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ALERTA MODAL */
+.alerta-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s}
+.alerta-modal.on{opacity:1;pointer-events:all}
+.alerta-box{background:#1a0e08;border:2px solid #ff8020;border-radius:var(--r);padding:24px 20px;max-width:360px;width:100%;text-align:center}
+.alerta-icon{font-size:36px;margin-bottom:12px}
+.alerta-title{font-family:'Playfair Display',serif;font-size:20px;color:#ff8020;margin-bottom:8px}
+.alerta-msg{font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:20px}
+.alerta-btns{display:flex;gap:10px}
+.alerta-btns button{flex:1;padding:12px;border-radius:var(--rsm);border:none;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.btn-mover{background:#ff8020;color:#1a0e08}
+.btn-abrir{margin-top:6px;padding:5px 10px;border-radius:var(--rsm);border:1px solid var(--green);background:var(--green-bg);color:var(--green);font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:block;width:100%;text-align:center;transition:all .2s}
+.btn-abrir:active{opacity:.7}
+.btn-abrir.activo{border-color:var(--amber);background:var(--amber-bg);color:var(--amber);cursor:default}
+.cd-margen{font-size:11px;font-weight:600;color:var(--amber);margin-top:4px;text-align:right}
+.btn-ignorar{background:var(--s2);color:var(--mid);border:1px solid var(--border)!important}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-row"><div class="logo">La Chimenea</div><div class="live"><span class="dot"></span>En directo</div></div>
+  <div class="hdr-date" id="fechaHdr"></div>
+</div>
+<div class="tabs">
+  <div class="tab on" onclick="showView('reservas')"><span id="tab-r-label">Reservas</span> <span class="bdg" id="bdg-r">0</span></div>
+  <div class="tab"   onclick="showView('mapa')">Mapa</div>
+  <div class="tab"   onclick="showView('espera')">Espera <span class="bdg" id="bdg-e">0</span></div>
+</div>
+
+<!-- ══ RESERVAS ══ -->
+<div class="view on" id="view-reservas">
+
+  <!-- SUB-TABS: Hoy / Próximas -->
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button class="subtab on" id="st-hoy" onclick="selSubtab('hoy')">Hoy <span class="bdg" id="bdg-hoy">0</span></button>
+    <button class="subtab" id="st-proximas" onclick="selSubtab('proximas')">Próximas <span class="bdg" id="bdg-prox">0</span></button>
+  </div>
+
+  <!-- PANEL HOY -->
+  <div id="panel-hoy">
+    <div class="stitle">Mediodía · 13:00h</div>
+    <div class="turno">
+      <div class="turno-hdr">
+        <div><div class="t-hora">13:00<small>h</small></div><div class="cd" id="cd-m"></div></div>
+        <div class="t-right">
+          <div class="pill" id="pill-m">—</div>
+          <button class="btn-abrir" id="btn-abrir-m" onclick="abrirTurno('m')">▶ Hemos abierto</button>
+          <div class="cd-margen" id="margen-m" style="display:none"></div>
+        </div>
+      </div>
+      <div id="alertas-m"></div>
+      <div class="rlist" id="rl-m"></div>
+      <div class="add-row"><button class="btnadd" onclick="openModal('m')">＋ Nueva reserva mediodía</button></div>
+    </div>
+    <div class="stitle">Noche · 20:00h</div>
+    <div class="turno">
+      <div class="turno-hdr">
+        <div><div class="t-hora">20:00<small>h</small></div><div class="cd" id="cd-n"></div></div>
+        <div class="t-right">
+          <div class="pill" id="pill-n">—</div>
+          <button class="btn-abrir" id="btn-abrir-n" onclick="abrirTurno('n')">▶ Hemos abierto</button>
+          <div class="cd-margen" id="margen-n" style="display:none"></div>
+        </div>
+      </div>
+      <div id="alertas-n"></div>
+      <div class="rlist" id="rl-n"></div>
+      <div class="add-row"><button class="btnadd" onclick="openModal('n')">＋ Nueva reserva noche</button></div>
+    </div>
+    <!-- Leyenda colores -->
+    <div class="color-legend">
+      <div class="stitle" style="margin-bottom:6px">Leyenda de estados</div>
+      <div class="cl-row"><div class="cl-dot" style="background:var(--gold)"></div><div class="cl-label">🟡 Dorado — Pendiente de llegar</div></div>
+      <div class="cl-row"><div class="cl-dot" style="background:#ff8020"></div><div class="cl-label">🟠 Naranja — ¡Quedan 2 min!</div></div>
+      <div class="cl-row"><div class="cl-dot" style="background:var(--red)"></div><div class="cl-label">🔴 Rojo — Sin llegar / en espera</div></div>
+    </div>
+  </div>
+
+  <!-- PANEL PRÓXIMAS (agrupadas por fecha) -->
+  <div id="panel-proximas" style="display:none">
+    <div id="lista-proximas"></div>
+    <button class="btnadd" style="margin-top:4px;border-radius:var(--rsm);padding:12px;border:1px dashed var(--border);width:100%;color:var(--gold);background:transparent;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px" onclick="openModal('m')">＋ Nueva reserva futura</button>
+  </div>
+
+</div>
+
+<!-- ══ MAPA ══ -->
+<div class="view" id="view-mapa">
+  <div class="mapa-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="mapa-title" style="margin-bottom:0">Interior del bar</div>
+      <div id="mapa-turno-badge" style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--gold-bg);color:var(--gold)">—</div>
+    </div>
+    <svg viewBox="0 0 380 260" width="100%" style="display:block">
+      <rect x="1" y="1" width="378" height="258" rx="4" fill="#141312" stroke="#282624" stroke-width="1.5"/>
+
+      <!-- ══ TRAMO VERTICAL (sube): 24 esquina → 25 → 26 ══ -->
+      <rect x="284" y="4" width="26" height="76" rx="2" fill="#2a1e08" stroke="#5a3a10" stroke-width="1"/>
+      <g class="zc nores">                                         <rect x="286" y="6"  width="22" height="22" rx="2"/><text x="297" y="21"  text-anchor="middle" font-family="Outfit" font-size="9">26</text></g>
+      <g class="zc libre" id="z-b25" onclick="mapaClick('b25')"> <rect x="286" y="30" width="22" height="22" rx="2"/><text x="297" y="45"  text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">25</text></g>
+      <g class="zc nores">                                         <rect x="286" y="54" width="22" height="22" rx="2"/><text x="297" y="69"  text-anchor="middle" font-family="Outfit" font-size="9">24</text></g>
+
+      <!-- ══ M6: mismo tamaño que M7, a la derecha de 25, a la izquierda de M1 ══ -->
+      <g class="zc libre" id="z-m6" onclick="mapaClick('m6')">
+        <rect x="310" y="30" width="30" height="22" rx="3"/>
+        <text x="325" y="41" text-anchor="middle" font-family="Playfair Display" font-size="10">M6</text>
+        <text x="325" y="49" text-anchor="middle" font-family="Outfit" font-size="6">1–4p</text>
+      </g>
+
+      <!-- ══ M1/M2: mismo tamaño exacto ══ -->
+      <g class="zc libre" id="z-m1" onclick="mapaClick('m1')">
+        <rect x="344" y="6" width="32" height="33" rx="3"/>
+        <text x="360" y="22" text-anchor="middle" font-family="Playfair Display" font-size="11">M1</text>
+        <text x="360" y="33" text-anchor="middle" font-family="Outfit" font-size="6">3–10p</text>
+      </g>
+      <g class="zc libre" id="z-m2" onclick="mapaClick('m2')">
+        <rect x="344" y="42" width="32" height="33" rx="3"/>
+        <text x="360" y="58" text-anchor="middle" font-family="Playfair Display" font-size="11">M2</text>
+        <text x="360" y="69" text-anchor="middle" font-family="Outfit" font-size="6">ext.</text>
+      </g>
+
+      <!-- ══ BARRA PRINCIPAL horizontal: 14→20, hueco 21·22, 23 ══ -->
+      <rect x="4" y="78" width="282" height="26" rx="2" fill="#2a1e08" stroke="#5a3a10" stroke-width="1"/>
+      <text x="141" y="87" text-anchor="middle" font-family="Outfit" font-size="5.5" fill="#7a5020">BARRA PRINCIPAL</text>
+      <g class="zc libre" id="z-b14" onclick="mapaClick('b14')"><rect x="6"   y="80" width="26" height="22" rx="2"/><text x="19"  y="95"  text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">14</text></g>
+      <g class="zc libre" id="z-b15" onclick="mapaClick('b15')"><rect x="34"  y="80" width="26" height="22" rx="2"/><text x="47"  y="95"  text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">15</text></g>
+      <g class="zc libre" id="z-b16" onclick="mapaClick('b16')"><rect x="62"  y="80" width="26" height="22" rx="2"/><text x="75"  y="95"  text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">16</text></g>
+      <g class="zc libre" id="z-b17" onclick="mapaClick('b17')"><rect x="90"  y="80" width="26" height="22" rx="2"/><text x="103" y="95"  text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">17</text></g>
+      <g class="zc libre" id="z-b18" onclick="mapaClick('b18')"><rect x="118" y="80" width="26" height="22" rx="2"/><text x="131" y="95"  text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">18</text></g>
+      <g class="zc libre" id="z-b19" onclick="mapaClick('b19')"><rect x="146" y="80" width="26" height="22" rx="2"/><text x="159" y="95"  text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">19</text></g>
+      <g class="zc libre" id="z-b20" onclick="mapaClick('b20')"><rect x="174" y="80" width="26" height="22" rx="2"/><text x="187" y="95"  text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">20</text></g>
+      <!-- Hueco 21·22 trabajo, frente a la puerta -->
+      <rect x="202" y="80" width="34" height="22" rx="2" fill="#111010" stroke="#1e1c1a" stroke-width="1" stroke-dasharray="2,2"/>
+      <text x="219" y="93" text-anchor="middle" font-family="Outfit" font-size="5.5" fill="#383430">21·22</text>
+      <!-- B23 -->
+      <g class="zc libre" id="z-b23" onclick="mapaClick('b23')"><rect x="238" y="80" width="26" height="22" rx="2"/><text x="251" y="95"  text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">23</text></g>
+      <!-- Esquina L -->
+      <rect x="266" y="78" width="20" height="26" rx="1" fill="#2a1e08" stroke="#5a3a10" stroke-width="1"/>
+
+      <!-- ══ V13: más corta, topes en 14 y 12 ══ -->
+      <g class="zc libre" id="z-v13" onclick="mapaClick('v13')">
+        <rect x="4" y="104" width="26" height="56" rx="2"/>
+        <text x="17" y="135" text-anchor="middle" font-family="Outfit" font-size="8" font-weight="600" transform="rotate(-90,17,135)">V13</text>
+      </g>
+
+      <!-- ══ BARRA VENTANA: más arriba, menos espacio entre barras ══ -->
+      <g class="zc libre" id="z-b12" onclick="mapaClick('b12')"><rect x="32"  y="162" width="28" height="22" rx="2"/><text x="46"  y="177" text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">12</text></g>
+      <g class="zc libre" id="z-b11" onclick="mapaClick('b11')"><rect x="62"  y="162" width="28" height="22" rx="2"/><text x="76"  y="177" text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">11</text></g>
+      <g class="zc libre" id="z-b10" onclick="mapaClick('b10')"><rect x="92"  y="162" width="28" height="22" rx="2"/><text x="106" y="177" text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">10</text></g>
+      <g class="zc libre" id="z-v9"  onclick="mapaClick('v9')"> <rect x="122" y="162" width="40" height="22" rx="2"/><text x="142" y="177" text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">9</text></g>
+      <g class="zc nores">                                        <rect x="164" y="162" width="22" height="22" rx="2"/><text x="175" y="177" text-anchor="middle" font-family="Outfit" font-size="9">8</text></g>
+      <!-- Barra marrón debajo -->
+      <rect x="30" y="185" width="158" height="7" rx="2" fill="#2a1e08" stroke="#5a3a10" stroke-width="1"/>
+      <text x="109" y="191" text-anchor="middle" font-family="Outfit" font-size="5" fill="#7a5020">BARRA VENTANA</text>
+
+      <!-- PUERTA: hueco vacío entre 8 y M7 -->
+
+      <!-- ══ MESAS en horizontal: M7·M4·M5·M3 ══ -->
+      <g class="zc libre" id="z-m7" onclick="mapaClick('m7')">
+        <rect x="236" y="162" width="30" height="22" rx="3"/>
+        <text x="251" y="173" text-anchor="middle" font-family="Playfair Display" font-size="10">M7</text>
+        <text x="251" y="181" text-anchor="middle" font-family="Outfit" font-size="6">1–3p</text>
+      </g>
+      <g class="zc libre" id="z-m4" onclick="mapaClick('m4')">
+        <rect x="268" y="162" width="34" height="22" rx="3"/>
+        <text x="285" y="173" text-anchor="middle" font-family="Playfair Display" font-size="10">M4</text>
+        <text x="285" y="181" text-anchor="middle" font-family="Outfit" font-size="6">3–8p</text>
+      </g>
+      <g class="zc libre" id="z-m5" onclick="mapaClick('m5')">
+        <rect x="304" y="162" width="30" height="22" rx="3"/>
+        <text x="319" y="173" text-anchor="middle" font-family="Playfair Display" font-size="10">M5</text>
+        <text x="319" y="181" text-anchor="middle" font-family="Outfit" font-size="6">1–3p</text>
+      </g>
+      <g class="zc nores">
+        <rect x="336" y="162" width="38" height="22" rx="3" fill="#1a1400" stroke="#c8a000" stroke-width="2"/>
+        <text x="355" y="173" text-anchor="middle" font-family="Outfit" font-size="8" fill="#c8a000">M3</text>
+        <text x="355" y="181" text-anchor="middle" font-family="Outfit" font-size="5" fill="#a08000">chim.</text>
+      </g>
+
+      <!-- Rincón V13 highlight -->
+      <rect x="3" y="103" width="28" height="83" rx="3" fill="none" stroke="#5a40a0" stroke-width="1.5" stroke-dasharray="3,2" opacity=".7"/>
+      <text x="34" y="140" font-family="Outfit" font-size="7" fill="#6050a0">★</text>
+
+      <!-- Pared terraza -->
+      <rect x="4" y="196" width="376" height="4" rx="1" fill="#282624"/>
+      <text x="190" y="193" text-anchor="middle" font-family="Outfit" font-size="6" fill="#383430">— PASO TERRAZA —</text>
+
+    </svg>
+    <div class="mapa-leg">
+      <div class="leg"><div class="ldot" style="background:#0e1820;border:1px solid #2a4a6a"></div>Libre</div>
+      <div class="leg"><div class="ldot" style="background:#1d1608;border:1px solid #8a6020"></div>Ocupada</div>
+      <div class="leg"><div class="ldot" style="background:#1a0e0b;border:1px solid #6a2a20"></div>Bloqueada auto</div>
+      <div class="leg"><div class="ldot" style="background:#161514;border:1px solid #252422"></div>Sin reserva</div>
+    </div>
+  </div>
+
+  <div class="mapa-wrap">
+    <div class="mapa-title">Terraza · 101–106</div>
+    <svg viewBox="0 0 340 130" width="100%" style="display:block">
+      <rect x="1" y="1" width="338" height="128" rx="4" fill="#141312" stroke="#282624" stroke-width="1.5"/>
+      <text x="170" y="122" text-anchor="middle" font-family="Outfit" font-size="8" fill="#3a3836" letter-spacing="4">T E R R A Z A</text>
+
+      <!-- Barra terraza forma U -->
+      <rect x="4"   y="8"  width="12" height="96"  rx="2" fill="#2a1e08" stroke="#5a3a10" stroke-width="1"/>
+      <rect x="4"   y="96" width="330" height="12" rx="2" fill="#2a1e08" stroke="#5a3a10" stroke-width="1"/>
+      <rect x="322" y="8"  width="12" height="96"  rx="2" fill="#2a1e08" stroke="#5a3a10" stroke-width="1"/>
+
+      <!-- Postes -->
+      <circle cx="24" cy="18" r="7" fill="#120e20" stroke="#3a2a60" stroke-width="1" opacity=".7"/>
+      <circle cx="314" cy="18" r="7" fill="#120e20" stroke="#3a2a60" stroke-width="1" opacity=".7"/>
+
+      <!-- T106 -->
+      <g class="zc libre" id="z-t106" onclick="mapaClick('t106')">
+        <rect x="18" y="28" width="42" height="36" rx="3"/>
+        <text x="39" y="44" text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">T106</text>
+        <text x="39" y="57" text-anchor="middle" font-family="Outfit" font-size="7">2 pax</text>
+      </g>
+      <!-- T105 -->
+      <g class="zc libre" id="z-t105" onclick="mapaClick('t105')">
+        <rect x="72" y="34" width="34" height="28" rx="3"/>
+        <text x="89" y="47" text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">T105</text>
+        <text x="89" y="57" text-anchor="middle" font-family="Outfit" font-size="7">2 pax</text>
+      </g>
+      <!-- T104 -->
+      <g class="zc libre" id="z-t104" onclick="mapaClick('t104')">
+        <rect x="122" y="34" width="34" height="28" rx="3"/>
+        <text x="139" y="47" text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">T104</text>
+        <text x="139" y="57" text-anchor="middle" font-family="Outfit" font-size="7">2 pax</text>
+      </g>
+      <!-- T103 -->
+      <g class="zc libre" id="z-t103" onclick="mapaClick('t103')">
+        <rect x="172" y="34" width="34" height="28" rx="3"/>
+        <text x="189" y="47" text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">T103</text>
+        <text x="189" y="57" text-anchor="middle" font-family="Outfit" font-size="7">2 pax</text>
+      </g>
+      <!-- T102 -->
+      <g class="zc libre" id="z-t102" onclick="mapaClick('t102')">
+        <rect x="222" y="34" width="34" height="28" rx="3"/>
+        <text x="239" y="47" text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">T102</text>
+        <text x="239" y="57" text-anchor="middle" font-family="Outfit" font-size="7">2 pax</text>
+      </g>
+      <!-- T101 -->
+      <g class="zc libre" id="z-t101" onclick="mapaClick('t101')">
+        <rect x="268" y="28" width="42" height="36" rx="3"/>
+        <text x="289" y="44" text-anchor="middle" font-family="Outfit" font-size="9" font-weight="600">T101</text>
+        <text x="289" y="57" text-anchor="middle" font-family="Outfit" font-size="7">2 pax</text>
+      </g>
+    </svg>
+    <div class="mapa-leg">
+      <div class="leg"><div class="ldot" style="background:#0e1820;border:1px solid #2a4a6a"></div>Libre</div>
+      <div class="leg"><div class="ldot" style="background:#1d1608;border:1px solid #8a6020"></div>Ocupada</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ESPERA ══ -->
+<div class="view" id="view-espera">
+  <div class="stitle">Lista de espera · hoy</div>
+  <div id="lista-espera"></div>
+  <button class="btnadd" style="margin-top:4px;border-radius:var(--r);padding:13px;border:1px dashed var(--border);width:100%;color:var(--gold);background:transparent;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px" onclick="openModalEspera()">＋ Añadir a la espera</button>
+</div>
+
+
+<!-- MODAL RESERVA -->
+<div class="overlay" id="modal-r">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="modal-r-title">Nueva reserva</div>
+    <label class="flabel">Turno</label>
+    <div class="tsel">
+      <div class="topt on" id="topt-m" onclick="selTurno('m')">☀️ 13:00h · Mediodía</div>
+      <div class="topt"    id="topt-n" onclick="selTurno('n')">🌙 20:00h · Noche</div>
+    </div>
+    <label class="flabel">Fecha</label>
+    <input class="finput" id="f-fecha" type="date" style="color-scheme:dark" onchange="renderGrid()">
+    <label class="flabel">Nombre</label>
+    <input class="finput" id="f-nombre" type="text" placeholder="Nombre del cliente" autocomplete="off">
+    <div class="frow">
+      <div class="fg"><label class="flabel">Personas</label>
+        <select class="finput" id="f-pax">
+          <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option>
+          <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+          <option value="7">7</option><option value="8">8</option><option value="10">10</option>
+          <option value="14">14</option><option value="20">20 (terraza)</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flabel">Tel. (opcional)</label>
+        <input class="finput" id="f-tel" type="tel" placeholder="612 000 000">
+      </div>
+    </div>
+    <label class="flabel">Zona(s) asignada(s)</label>
+    <div class="zona-grid" id="zona-grid"></div>
+    <label class="flabel">Notas (opcional)</label>
+    <input class="finput" id="f-notas" type="text" placeholder="Alérgenos, ocasión especial...">
+    <button class="btnprim" id="modal-r-btn" onclick="guardarReserva()">Guardar reserva</button>
+    <button class="btnsec" onclick="closeOverlay('modal-r')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL ESPERA -->
+<div class="overlay" id="modal-e">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="modal-e-title">Añadir a la espera</div>
+    <label class="flabel">Nombre</label>
+    <input class="finput" id="e-nombre" type="text" placeholder="Nombre del cliente" autocomplete="off">
+    <div class="frow">
+      <div class="fg"><label class="flabel">Personas</label>
+        <select class="finput" id="e-pax"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option></select>
+      </div>
+      <div class="fg"><label class="flabel">Turno</label>
+        <select class="finput" id="e-turno"><option value="m">Mediodía</option><option value="n">Noche</option></select>
+      </div>
+    </div>
+    <label class="flabel">¿Qué buscan?</label>
+    <div class="pref-grid" id="pref-grid">
+      <div class="pref-opt on" onclick="selPref(this,'cualquier sitio')">Cualquier sitio</div>
+      <div class="pref-opt" onclick="selPref(this,'solo mesa')">Solo mesa</div>
+      <div class="pref-opt" onclick="selPref(this,'solo barra')">Solo barra</div>
+      <div class="pref-opt" onclick="selPref(this,'solo terraza')">Solo terraza</div>
+    </div>
+    <label class="flabel">Comentario adicional</label>
+    <input class="finput" id="e-comentario" type="text" placeholder="Ej: alérgico a mariscos, cumpleaños...">
+    <button class="btnprim" onclick="guardarEspera()">Añadir a la espera</button>
+    <button class="btnsec" onclick="closeOverlay('modal-e')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL EDITAR ESPERA -->
+<div class="overlay" id="modal-ee">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">Editar cliente en espera</div>
+    <label class="flabel">Nombre</label>
+    <input class="finput" id="ee-nombre" type="text" placeholder="Nombre del cliente" autocomplete="off">
+    <div class="frow">
+      <div class="fg"><label class="flabel">Personas</label>
+        <select class="finput" id="ee-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option></select>
+      </div>
+      <div class="fg"><label class="flabel">Turno</label>
+        <select class="finput" id="ee-turno"><option value="m">Mediodía</option><option value="n">Noche</option></select>
+      </div>
+    </div>
+    <label class="flabel">¿Qué buscan?</label>
+    <div class="pref-grid" id="pref-grid-ee">
+      <div class="pref-opt on" onclick="selPrefEE(this,'cualquier sitio')">Cualquier sitio</div>
+      <div class="pref-opt" onclick="selPrefEE(this,'solo mesa')">Solo mesa</div>
+      <div class="pref-opt" onclick="selPrefEE(this,'solo barra')">Solo barra</div>
+      <div class="pref-opt" onclick="selPrefEE(this,'solo terraza')">Solo terraza</div>
+    </div>
+    <label class="flabel">Comentario adicional</label>
+    <input class="finput" id="ee-comentario" type="text" placeholder="Ej: alérgico a mariscos, cumpleaños...">
+    <button class="btnprim" onclick="guardarEditEspera()">Guardar cambios</button>
+    <button class="btnsec" onclick="closeOverlay('modal-ee')">Cancelar</button>
+  </div>
+</div>
+
+<!-- ALERTA MODAL: aviso 2min antes -->
+<div class="alerta-modal" id="alerta-modal">
+  <div class="alerta-box">
+    <div class="alerta-icon">⏰</div>
+    <div class="alerta-title">¡Quedan 2 minutos!</div>
+    <div class="alerta-msg" id="alerta-msg"></div>
+    <div class="alerta-btns">
+      <button class="btn-mover" onclick="moverDesdeAlerta()">Mover a espera ahora</button>
+      <button class="btn-ignorar" onclick="ignorarAlerta()">Ignorar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR CANCELACIÓN -->
+<div class="alerta-modal" id="modal-cancelar">
+  <div class="alerta-box" style="border-color:var(--red)">
+    <div class="alerta-icon">🗑️</div>
+    <div class="alerta-title" style="color:var(--red)">Cancelar reserva</div>
+    <div class="alerta-msg" id="cancelar-msg"></div>
+    <div class="alerta-btns">
+      <button class="btn-mover" style="background:var(--red);color:#fff" onclick="confirmarCancelacion()">Sí, cancelar</button>
+      <button class="btn-ignorar" onclick="document.getElementById('modal-cancelar').classList.remove('on')">Mantener</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ZONAS = {
+  b14:{ label:'Barra 14', tipo:'barra', min:1, max:2, nota:'' },
+  b15:{ label:'Barra 15', tipo:'barra', min:1, max:2, nota:'' },
+  b16:{ label:'Barra 16', tipo:'barra', min:1, max:2, nota:'' },
+  b17:{ label:'Barra 17', tipo:'barra', min:1, max:2, nota:'' },
+  b18:{ label:'Barra 18', tipo:'barra', min:1, max:2, nota:'' },
+  b19:{ label:'Barra 19', tipo:'barra', min:1, max:2, nota:'' },
+  b20:{ label:'Barra 20', tipo:'barra', min:1, max:2, nota:'' },
+  b23:{ label:'Barra 23', tipo:'barra', min:1, max:2, nota:'' },
+  b25:{ label:'Barra 25', tipo:'barra', min:2, max:3, nota:'Tramo corto' },
+  b10:{ label:'Barra 10', tipo:'barra', min:1, max:2, nota:'Barra ventana' },
+  b11:{ label:'Barra 11', tipo:'barra', min:1, max:2, nota:'Barra ventana' },
+  b12:{ label:'Barra 12', tipo:'barra', min:1, max:2, nota:'Barra ventana' },
+  v9: { label:'Ventana 9', tipo:'barra', min:1, max:3, nota:'' },
+  v13:{ label:'Ventana 13 (parrilla)', tipo:'barra', min:2, max:6, nota:'Rincón izq' },
+  m1: { label:'Mesa 1 (Cuadro 1)', tipo:'mesa', min:3, max:10, nota:'' },
+  m2: { label:'Mesa 2 (extremo M1)', tipo:'mesa', min:1, max:3, nota:'Solo si M1 ≤2 pax' },
+  m4: { label:'Mesa 4 (Ventana 4)', tipo:'mesa', min:3, max:8, nota:'' },
+  m5: { label:'Mesa 5 (extremo M4)', tipo:'mesa', min:1, max:3, nota:'Solo si M4 ≤2 pax' },
+  m6: { label:'Mesa 6 (Mesita)', tipo:'mesa', min:1, max:4, nota:'' },
+  m7: { label:'Mesa 7 (M.Puerta)', tipo:'mesa', min:1, max:3, nota:'' },
+  t101:{ label:'Terraza 101', tipo:'terraza', min:1, max:2, nota:'' },
+  t102:{ label:'Terraza 102', tipo:'terraza', min:1, max:2, nota:'' },
+  t103:{ label:'Terraza 103', tipo:'terraza', min:1, max:2, nota:'' },
+  t104:{ label:'Terraza 104', tipo:'terraza', min:1, max:2, nota:'' },
+  t105:{ label:'Terraza 105', tipo:'terraza', min:1, max:2, nota:'' },
+  t106:{ label:'Terraza 106', tipo:'terraza', min:1, max:2, nota:'' },
+};
+
+const BLOQUEOS_AUTO = [
+  { padre:'m1', hijo:'m2', umbralPax:3 },
+  { padre:'m4', hijo:'m5', umbralPax:3 },
+];
+
+const COMBOS = [
+  { zonas:['t101','t102','t103','t104','t105','t106'], label:'Terraza completa',   min:10, max:20 },
+  { zonas:['m1','m6'],                                 label:'M1 + M6 en L',       min:11, max:14 },
+  { zonas:['b17','b18','b19','b20'],                   label:'B17·B18·B19·B20',    min:6,  max:8  },
+  { zonas:['v13'],                                     label:'V13 rincón parrilla',min:4,  max:6  },
+  { zonas:['v13','b12','b11'],                         label:'V13·B12·B11',        min:4,  max:7  },
+  { zonas:['b10','b11','b12'],                         label:'B10·B11·B12',        min:4,  max:6  },
+  { zonas:['b18','b19','b20'],                         label:'B18·B19·B20',        min:4,  max:6  },
+  { zonas:['t106','t105','t104'],                      label:'T106·T105·T104',     min:4,  max:6  },
+  { zonas:['t103','t102','t101'],                      label:'T103·T102·T101',     min:4,  max:6  },
+  { zonas:['m1'],  label:'Mesa 1',    min:3, max:10 },
+  { zonas:['m4'],  label:'Mesa 4',    min:3, max:8  },
+  { zonas:['m6'],  label:'Mesa 6',    min:1, max:4  },
+  { zonas:['m7'],  label:'Mesa 7',    min:1, max:3  },
+  { zonas:['v9'],  label:'Ventana 9', min:1, max:3  },
+  { zonas:['t106'],label:'T106',      min:1, max:2  },
+  { zonas:['t101'],label:'T101',      min:1, max:2  },
+  { zonas:['t103'],label:'T103',      min:1, max:2  },
+  { zonas:['b20'], label:'Barra 20',  min:1, max:2  },
+  { zonas:['b15'], label:'Barra 15',  min:1, max:2  },
+  { zonas:['b23'], label:'Barra 23',  min:1, max:2  },
+  { zonas:['m2'],  label:'Mesa 2 (extremo)', min:1, max:2 },
+  { zonas:['m5'],  label:'Mesa 5 (extremo)', min:1, max:2 },
+];
+
+// Turnos: hora de apertura y límite (en minutos desde medianoche)
+const TURNOS = {
+  m: { abre:13*60, limite:13*60+15, alerta:13*60+13 },
+  n: { abre:20*60, limite:20*60+15, alerta:20*60+13 },
+};
+
+// ── FRANJA ACTIVA: 01:00-16:30 = mediodía, 16:30-01:00 = noche ──
+function franjaActiva(){
+  const now = new Date();
+  const min = now.getHours()*60 + now.getMinutes();
+  // 01:00 (60min) → 16:30 (990min) = mediodía
+  // 16:30 (990min) → 01:00 siguiente (60min) = noche
+  if(min >= 60 && min < 990) return 'm';
+  return 'n';
+}
+
+// Guardamos la última franja conocida para detectar cambio
+let _ultimaFranja = null;
+
+function checkCambioTurno(){
+  const franja = franjaActiva();
+  if(_ultimaFranja === null){ _ultimaFranja = franja; return; }
+  if(franja !== _ultimaFranja){
+    _ultimaFranja = franja;
+    limpiarTurnoAnterior(franja);
+  }
+}
+
+function limpiarTurnoAnterior(franjaActual){
+  const turnoLimpiado = franjaActual === 'm' ? 'n' : 'm';
+  // Borrar reservas de hoy del turno que terminó
+  state.reservas[turnoLimpiado] = state.reservas[turnoLimpiado].filter(r => !esFechaHoy(r.fecha));
+  // Vaciar espera completamente — turno terminado = todo a cero
+  state.espera = [];
+  delete aperturas[turnoLimpiado];
+  try{ localStorage.setItem('bar_aperturas', JSON.stringify(aperturas)); }catch(e){}
+  alertasMostradas = new Set();
+  alertaActual = null;
+  const btn = document.getElementById('btn-abrir-'+turnoLimpiado);
+  if(btn){ btn.textContent='▶ Hemos abierto'; btn.classList.remove('activo'); }
+  const margen = document.getElementById('margen-'+turnoLimpiado);
+  if(margen) margen.style.display='none';
+  save(); renderR(); renderE(); updMapa(); updBadges();
+  showToast(franjaActual === 'm' ? '🌙 Turno noche — todo a cero' : '☀️ Turno mediodía — todo a cero');
+}
+
+// ── FECHA ──
+function fechaHoy(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fechaDisplay(iso){
+  if(!iso) return 'Hoy';
+  const [y,m,d]=iso.split('-');
+  const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const diasSemana=['dom','lun','mar','mié','jue','vie','sáb'];
+  const fecha=new Date(parseInt(y),parseInt(m)-1,parseInt(d));
+  const hoy=fechaHoy();
+  if(iso===hoy) return 'Hoy';
+  const manana=new Date(); manana.setDate(manana.getDate()+1);
+  const mIso=`${manana.getFullYear()}-${String(manana.getMonth()+1).padStart(2,'0')}-${String(manana.getDate()).padStart(2,'0')}`;
+  if(iso===mIso) return 'Mañana';
+  return `${diasSemana[fecha.getDay()]} ${parseInt(d)} ${meses[parseInt(m)-1]}`;
+}
+function esFechaHoy(iso){ return !iso||iso===fechaHoy(); }
+
+const KEY='bar_v8';
+let state={ reservas:{m:[],n:[]}, espera:[] };
+let turnoActual='m', zonasSeleccionadas=[], prefEspera='cualquier sitio';
+let editando = null; // { turno, idx } cuando estamos editando
+let alertasMostradas = new Set(); // ids ya alertados
+let alertaActual = null; // { turno, idx }
+
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(state)); }catch(e){} }
+function load(){
+  try{
+    const d=localStorage.getItem(KEY);
+    if(d){
+      state=JSON.parse(d);
+      // Migración: añadir fecha de hoy a reservas antiguas sin fecha
+      const hoyIso=fechaHoy();
+      ['m','n'].forEach(t=>{
+        state.reservas[t]=state.reservas[t].map(r=>({
+          ...r,
+          fecha: r.fecha || hoyIso,
+          caducada: r.caducada || false
+        }));
+      });
+    }
+  }catch(e){}
+}
+
+// ── NÚMERO SIGUIENTE ESPERA (orden de llegada: 1, 2, 3...) ──
+function nextNumEspera(){
+  return state.espera.length + 1;
+}
+
+function setFecha(){
+  const d=new Date();
+  const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  document.getElementById('fechaHdr').textContent=`${dias[d.getDay()]} ${d.getDate()} ${meses[d.getMonth()]}`;
+}
+
+// ── ESTADO DE UNA RESERVA según hora actual ──
+function estadoReserva(r, turnoId){
+  if(r.caducada) return 'caducada';
+  if(!esFechaHoy(r.fecha)) return 'pendiente';
+  const now = new Date(), act = now.getHours()*60+now.getMinutes();
+  const t = TURNOS[turnoId];
+  if(act >= t.alerta && act < t.limite) return 'urgente';
+  if(act >= t.limite) return 'caducada';
+  return 'pendiente';
+}
+
+// ── APERTURA MANUAL DE TURNO ──
+// { m: timestamp_apertura, n: timestamp_apertura }
+let aperturas = {};
+const MARGEN_MS = 15 * 60 * 1000; // 15 minutos
+
+function abrirTurno(t){
+  if(aperturas[t]) return; // ya abierto
+  aperturas[t] = Date.now();
+  try{ localStorage.setItem('bar_aperturas', JSON.stringify(aperturas)); }catch(e){}
+  const btn = document.getElementById('btn-abrir-'+t);
+  btn.textContent = '✓ Abierto · 15 min en marcha';
+  btn.classList.add('activo');
+  document.getElementById('margen-m' === 'margen-'+t ? 'margen-m' : 'margen-'+t).style.display = 'block';
+  showToast(t==='m' ? '☀️ Turno mediodía abierto — 15 min de margen' : '🌙 Turno noche abierto — 15 min de margen');
+  renderR();
+}
+
+function updateMargen(){
+  ['m','n'].forEach(t=>{
+    const ts = aperturas[t];
+    const margenEl = document.getElementById('margen-'+t);
+    const btn = document.getElementById('btn-abrir-'+t);
+    if(!ts){ margenEl.style.display='none'; return; }
+    const restanMs = (ts + MARGEN_MS) - Date.now();
+    if(restanMs <= 0){
+      margenEl.style.display='none';
+      // Si quedan reservas sin llegar, pasarlas a espera como primeros
+      const pendientes = state.reservas[t].filter(r=>esFechaHoy(r.fecha)&&!r.caducada);
+      if(pendientes.length){
+        const nuevaEspera = pendientes.map((r,i)=>({
+          num: i+1,
+          nombre: r.nombre,
+          pax: r.pax,
+          turno: t,
+          hora: horaActual(),
+          preferencia: 'cualquier sitio',
+          comentario: 'Reserva sin confirmar llegada',
+          cuenta: '',
+          ts: Date.now()+i
+        }));
+        // Ponerlos primeros en la lista de espera
+        state.espera = [...nuevaEspera, ...state.espera].map((e,i)=>({...e, num:i+1}));
+        state.reservas[t] = state.reservas[t].map(r=>
+          esFechaHoy(r.fecha)&&!r.caducada ? {...r, caducada:true} : r
+        );
+        save(); renderR(); renderE();
+        showToast(`⏰ 15 min cumplidos — ${pendientes.length} reserva(s) a la espera`);
+      }
+      delete aperturas[t];
+      try{ localStorage.setItem('bar_aperturas', JSON.stringify(aperturas)); }catch(e){}
+      if(btn){ btn.textContent='▶ Hemos abierto'; btn.classList.remove('activo'); }
+    } else {
+      margenEl.style.display='block';
+      const min = Math.floor(restanMs/60000);
+      const seg = Math.floor((restanMs%60000)/1000);
+      margenEl.textContent = `⏱ ${min}:${String(seg).padStart(2,'0')} para el límite`;
+    }
+  });
+}
+
+// ── TICK: revisa estados cada 30s ──
+function tick(){
+  updateCD();
+  updateMargen();
+  updMapa();
+  checkCambioTurno();
+}
+
+// Tick más frecuente para el contador de margen (cada segundo)
+setInterval(updateMargen, 1000);
+
+function horaActual(){
+  const n=new Date();
+  return `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+}
+
+// ── COUNTDOWN ──
+function updateCD(){
+  const now=new Date(), act=now.getHours()*60+now.getMinutes();
+  Object.entries(TURNOS).forEach(([id,t])=>{
+    const p=document.getElementById('pill-'+id), cd=document.getElementById('cd-'+id);
+    if(!p||!cd) return;
+    if(aperturas[id]){
+      p.textContent='Abierto'; p.className='pill p-open';
+      cd.textContent=''; cd.className='cd';
+    } else if(act<t.abre){
+      p.textContent='Pendiente'; p.className='pill p-wait';
+      cd.textContent=`Abre en ${t.abre-act}min`; cd.className='cd';
+    } else {
+      p.textContent='Pendiente apertura'; p.className='pill p-wait';
+      cd.textContent='Pulsa "Hemos abierto"'; cd.className='cd';
+    }
+  });
+}
+
+// ── ZONAS ESTADO ──
+function getEstadoZonas(fechaFiltro, turnoFiltro){
+  const fecha = fechaFiltro || (document.getElementById('f-fecha')?.value) || fechaHoy();
+  // Si no se pasa turno, intentar leerlo del modal activo
+  const turno = turnoFiltro || turnoActual || 'm';
+  const ocupadas=new Set(), bloqueadas=new Set();
+  // Solo reservas del MISMO día Y MISMO turno
+  const delTurno = state.reservas[turno] || [];
+  delTurno.filter(r=>!r.caducada && (r.fecha||fechaHoy())===fecha).forEach(r=>{
+    if(r.zonas) r.zonas.forEach(z=>ocupadas.add(z));
+  });
+  // Si estamos editando, excluir la propia reserva del bloqueo
+  if(editando && editando.turno===turno){
+    const rEditando = state.reservas[editando.turno][editando.idx];
+    if(rEditando&&rEditando.zonas) rEditando.zonas.forEach(z=>ocupadas.delete(z));
+  }
+  BLOQUEOS_AUTO.forEach(regla=>{
+    delTurno.filter(r=>!r.caducada&&(r.fecha||fechaHoy())===fecha).forEach(r=>{
+      if(r.zonas&&r.zonas.includes(regla.padre)&&parseInt(r.pax)>=regla.umbralPax)
+        bloqueadas.add(regla.hijo);
+    });
+  });
+  return { ocupadas, bloqueadas };
+}
+
+// ── RENDER RESERVAS (solo hoy) ──
+function renderR(){
+  const franja = franjaActiva(); // 'm' o 'n'
+  ['m','n'].forEach(t=>{
+    const el=document.getElementById('rl-'+t);
+    const list = state.reservas[t];
+    // Solo mostrar reservas del turno activo de hoy, sin caducadas
+    const deHoy = list.reduce((acc, r, i) => {
+      if(esFechaHoy(r.fecha) && !r.caducada && t === franja) acc.push({r, i});
+      return acc;
+    }, []);
+    if(!deHoy.length){ el.innerHTML='<div class="empty">Sin reservas para hoy</div>'; return; }
+    el.innerHTML = deHoy.map(({r, i}) => itemReservaHtml(r, t, i, true)).join('');
+  });
+  updBadges(); updMapa();
+  if(subtabActual==='proximas') renderProximas();
+}
+
+// ── SUB-TABS ──
+let subtabActual = 'hoy';
+function selSubtab(v){
+  subtabActual = v;
+  document.getElementById('st-hoy').classList.toggle('on', v==='hoy');
+  document.getElementById('st-proximas').classList.toggle('on', v==='proximas');
+  document.getElementById('panel-hoy').style.display = v==='hoy' ? 'block' : 'none';
+  document.getElementById('panel-proximas').style.display = v==='proximas' ? 'block' : 'none';
+  if(v==='proximas') renderProximas();
+}
+
+// ── RENDER PRÓXIMAS (agrupadas por fecha, solo fechas futuras) ──
+function renderProximas(){
+  const hoy = fechaHoy();
+
+  // Construir lista con índices reales desde el principio
+  const todas = [];
+  ['m','n'].forEach(turnoId => {
+    state.reservas[turnoId].forEach((r, i) => {
+      if(r.fecha && r.fecha > hoy && !r.caducada)
+        todas.push({r, i, turno: turnoId});
+    });
+  });
+
+  const c = document.getElementById('lista-proximas');
+  if(!todas.length){
+    c.innerHTML='<div class="empty" style="padding:24px 0;text-align:center;color:var(--dim);font-size:13px">Sin reservas futuras</div>';
+    return;
+  }
+
+  // Agrupar por fecha
+  const grupos = {};
+  todas.forEach(({r, i, turno}) => {
+    if(!grupos[r.fecha]) grupos[r.fecha] = { m:[], n:[] };
+    grupos[r.fecha][turno].push({r, i});
+  });
+
+  const fechasOrdenadas = Object.keys(grupos).sort();
+
+  c.innerHTML = fechasOrdenadas.map(fecha => {
+    const g = grupos[fecha];
+    const total = g.m.length + g.n.length;
+    const turnoHtml = (lista, turnoId) => {
+      if(!lista.length) return '';
+      const icono = turnoId==='m' ? '☀️' : '🌙';
+      const horaLabel = turnoId==='m' ? '13:00h' : '20:00h';
+      const items = lista.map(({r, i}) => itemReservaHtml(r, turnoId, i, false)).join('');
+      return `<div class="fecha-grupo-turno">
+        <div class="fecha-grupo-turno-hdr">${icono} ${horaLabel}</div>
+        <div class="rlist">${items}</div>
+      </div>`;
+    };
+    return `<div class="fecha-grupo">
+      <div class="fecha-grupo-hdr">
+        <div class="fecha-grupo-label">📅 ${fechaDisplay(fecha)}</div>
+        <div class="fecha-grupo-count">${total} reserva${total>1?'s':''}</div>
+      </div>
+      ${turnoHtml(g.m,'m')}
+      ${turnoHtml(g.n,'n')}
+    </div>`;
+  }).join('');
+}
+
+// Helper: HTML de un item de reserva reutilizable
+function itemReservaHtml(r, t, i, esHoy){
+  const est = esHoy ? estadoReserva(r,t) : 'pendiente';
+  const etiquetas={
+    pendiente:'🟡 Pendiente de llegar',
+    urgente:'🟠 ¡Quedan 2 minutos!',
+    caducada:'🔴 No llegó · en espera'
+  };
+  return `<div class="ritem st-${est}">
+    <div class="rnum">${i+1}</div>
+    <div class="rinfo">
+      <div class="rname">${r.nombre}</div>
+      <div class="rmeta">👥 ${r.pax} personas${r.tel?' · 📞 '+r.tel:''}${r.notas?' · '+r.notas:''}</div>
+      ${esHoy
+        ? `<div class="restado">${etiquetas[est]||''}</div>`
+        : `<div style="font-size:10px;color:var(--dim);margin-top:2px">${r.zonas&&r.zonas.length?r.zonas.map(z=>ZONAS[z]?ZONAS[z].label:z).join(' + '):'Sin zona asignada'}</div>`
+      }
+      ${r.zonas&&r.zonas.length&&esHoy?`<div class="rzona">${r.zonas.map(z=>`<span class="ztag ${r.zonas.length>1?'m':''}">${ZONAS[z]?ZONAS[z].label:z}</span>`).join('')}</div>`:''}
+    </div>
+    <div class="racts">
+      ${i>=0?`<div class="bico edit" onclick="editarReserva('${t}',${i})" title="Editar">✎</div>`:''}
+      ${i>=0?`<div class="bico del" onclick="cancelar('${t}',${i})" title="Eliminar reserva">✕</div>`:''}
+    </div>
+  </div>`;
+}
+function renderE(){
+  const c=document.getElementById('lista-espera');
+  if(!state.espera.length){ c.innerHTML='<div class="empty" style="padding:20px 0">Sin clientes en espera 🎉</div>'; return; }
+  c.innerHTML=state.espera.map((e,i)=>`
+    <div class="eitem">
+      <div class="eitem-top">
+        <div class="enum">${i+1}</div>
+        <div class="einfo">
+          <div class="ename-row">
+            <span class="ename">${e.nombre}</span>
+            <span class="epax">👥 ${e.pax}</span>
+          </div>
+          <div class="emeta">${e.turno==='m'?'☀️ Mediodía':'🌙 Noche'} · ${e.hora}</div>
+          ${e.preferencia?`<div class="emeta" style="margin-top:2px">📍 ${e.preferencia}</div>`:''}
+          ${e.comentario?`<div class="ecomentario">💬 ${e.comentario}</div>`:''}
+        </div>
+        <div class="eacts">
+          <div class="bico edit" onclick="editarEspera(${i})" title="Editar">✎</div>
+          <div class="bico del" onclick="quitarE(${i})">✕</div>
+        </div>
+      </div>
+      <div class="ecuenta-row">
+        <span class="ecuenta-label">Nº cuenta</span>
+        <input class="ecuenta-input" type="text" placeholder="Escribe el nº de cuenta..."
+          value="${e.cuenta||''}"
+          onchange="setCuenta(${i},this.value)"
+          onclick="this.select()">
+      </div>
+    </div>`).join('');
+  updBadges();
+}
+
+function setCuenta(i, val){
+  if(state.espera[i]) state.espera[i].cuenta = val.trim();
+  save();
+}
+
+// ── EDITAR ESPERA ──
+let editandoEspera = null;
+let prefEsperaEdit = 'cualquier sitio';
+function editarEspera(i){
+  const e = state.espera[i];
+  editandoEspera = i;
+  document.getElementById('ee-nombre').value = e.nombre;
+  document.getElementById('ee-pax').value = e.pax;
+  document.getElementById('ee-turno').value = e.turno;
+  document.getElementById('ee-comentario').value = e.comentario||'';
+  prefEsperaEdit = e.preferencia||'cualquier sitio';
+  document.querySelectorAll('#pref-grid-ee .pref-opt').forEach(el=>{
+    el.classList.toggle('on', el.getAttribute('onclick').includes(`'${prefEsperaEdit}'`));
+  });
+  document.getElementById('modal-ee').classList.add('on');
+  setTimeout(()=>document.getElementById('ee-nombre').focus(),400);
+}
+function selPrefEE(el, val){
+  prefEsperaEdit = val;
+  document.querySelectorAll('#pref-grid-ee .pref-opt').forEach(e=>e.classList.remove('on'));
+  el.classList.add('on');
+}
+function guardarEditEspera(){
+  const nombre = document.getElementById('ee-nombre').value.trim();
+  if(!nombre){ document.getElementById('ee-nombre').focus(); return; }
+  const e = state.espera[editandoEspera];
+  e.nombre = nombre;
+  e.pax = document.getElementById('ee-pax').value;
+  e.turno = document.getElementById('ee-turno').value;
+  e.comentario = document.getElementById('ee-comentario').value.trim();
+  e.preferencia = prefEsperaEdit;
+  save(); closeOverlay('modal-ee'); renderE();
+  showToast(`✏️ ${nombre} actualizado`);
+  editandoEspera = null;
+}
+
+// ── MAPA ──
+// ── TURNO MÁS PRÓXIMO para el mapa ──
+function turnoProximo(){ return franjaActiva(); }
+
+function getOcupadasMapa(){
+  const hoy = fechaHoy();
+  const turno = turnoProximo();
+  const ocupadas=new Set(), bloqueadas=new Set();
+  state.reservas[turno].filter(r=>!r.caducada&&(r.fecha||hoy)===hoy).forEach(r=>{
+    if(r.zonas) r.zonas.forEach(z=>ocupadas.add(z));
+  });
+  BLOQUEOS_AUTO.forEach(regla=>{
+    state.reservas[turno].filter(r=>!r.caducada&&(r.fecha||hoy)===hoy).forEach(r=>{
+      if(r.zonas&&r.zonas.includes(regla.padre)&&parseInt(r.pax)>=regla.umbralPax)
+        bloqueadas.add(regla.hijo);
+    });
+  });
+  return { ocupadas, bloqueadas, turno };
+}
+
+// Colores directos por estado (más fiable en SVG móvil)
+const ZONA_COLORS = {
+  libre:     { fill:'#0e1820', stroke:'#2a4a6a', sw:'1',   text:'#4a8ec8' },
+  ocupada:   { fill:'#2a1000', stroke:'#d4660a', sw:'2',   text:'#e8901a' },
+  bloqueada: { fill:'#1a0e0b', stroke:'#6a2a20', sw:'1',   text:'#6a3020' },
+  nores:     { fill:'#161514', stroke:'#252422', sw:'1',   text:'#3a3836' },
+  espwait:   { fill:'#150f20', stroke:'#5a40a0', sw:'1',   text:'#8060c0' },
+};
+
+function applyZonaColor(el, estado){
+  if(!el) return;
+  const c = ZONA_COLORS[estado] || ZONA_COLORS.libre;
+  const rect = el.querySelector('rect');
+  const text = el.querySelector('text');
+  if(rect){
+    rect.setAttribute('fill', c.fill);
+    rect.setAttribute('stroke', c.stroke);
+    rect.setAttribute('stroke-width', c.sw);
+  }
+  if(text) text.setAttribute('fill', c.text);
+  // En SVG className es SVGAnimatedString, hay que usar setAttribute
+  el.setAttribute('class', `zc ${estado}`);
+}
+
+function updMapa(){
+  const { ocupadas, bloqueadas, turno } = getOcupadasMapa();
+  const badge = document.getElementById('mapa-turno-badge');
+  if(badge){
+    badge.textContent = turno==='m' ? '☀️ Mediodía · 13:00h' : '🌙 Noche · 20:00h';
+    badge.style.background = turno==='m' ? 'var(--amber-bg)' : 'var(--blue-bg)';
+    badge.style.color = turno==='m' ? 'var(--amber)' : 'var(--blue)';
+  }
+  Object.keys(ZONAS).forEach(id=>{
+    const el=document.getElementById('z-'+id); if(!el) return;
+    if(ocupadas.has(id)) applyZonaColor(el,'ocupada');
+    else if(bloqueadas.has(id)) applyZonaColor(el,'bloqueada');
+    else applyZonaColor(el,'libre');
+  });
+}
+
+function mapaClick(id){
+  const z=ZONAS[id]; if(!z) return;
+  const { ocupadas, bloqueadas }=getOcupadasMapa();
+  let estado='🟢 Libre';
+  if(ocupadas.has(id)) estado='🔴 Ocupada';
+  else if(bloqueadas.has(id)) estado='🔒 Bloqueada (misma mesa)';
+  showToast(`${z.label} · ${z.min===z.max?z.min:z.min+'–'+z.max} pax · ${estado}`);
+}
+
+// ── SUGERENCIA ZONAS ──
+function sugerirZonas(){
+  // Sin sugerencias automáticas — solo renderiza el grid limpio
+  zonasSeleccionadas=[];
+  renderGrid();
+}
+
+function renderGrid(){
+  const { ocupadas, bloqueadas }=getEstadoZonas();
+  const noDisp=id=>ocupadas.has(id)||bloqueadas.has(id);
+  document.getElementById('zona-grid').innerHTML=Object.entries(ZONAS).map(([id,z])=>{
+    const bloq=noDisp(id)&&!zonasSeleccionadas.includes(id);
+    const sel=zonasSeleccionadas.includes(id);
+    const notaBloq=bloqueadas.has(id)?' · 🔒':'';
+    return `<div class="zopt${sel?' on':''}${bloq?' bloq':''}" onclick="toggleZ('${id}')">
+      <div class="zopt-name">${z.label}</div>
+      <div class="zopt-cap">${z.min===z.max?z.min:z.min+'–'+z.max} pax${z.nota?' · '+z.nota:''}${notaBloq}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleZ(id){
+  const { ocupadas, bloqueadas }=getEstadoZonas();
+  if((ocupadas.has(id)||bloqueadas.has(id))&&!zonasSeleccionadas.includes(id)){ showToast('🔒 Zona no disponible'); return; }
+  const i=zonasSeleccionadas.indexOf(id);
+  if(i>=0) zonasSeleccionadas.splice(i,1); else zonasSeleccionadas.push(id);
+  renderGrid();
+}
+
+// ── ACCIONES ──
+let cancelarPendiente = null; // { t, i }
+function cancelar(t, i){
+  cancelarPendiente = { t, i };
+  const r = state.reservas[t][i];
+  document.getElementById('cancelar-msg').innerHTML =
+    `¿Cancelar la reserva de <strong>${r.nombre}</strong>?<br><span style="font-size:12px;color:var(--dim)">${r.pax} personas · ${r.turno==='m'||t==='m'?'☀️ Mediodía':'🌙 Noche'}</span>`;
+  document.getElementById('modal-cancelar').classList.add('on');
+}
+function confirmarCancelacion(){
+  if(!cancelarPendiente) return;
+  const { t, i } = cancelarPendiente;
+  const nombre = state.reservas[t][i]?.nombre || '';
+  state.reservas[t].splice(i, 1);
+  cancelarPendiente = null;
+  document.getElementById('modal-cancelar').classList.remove('on');
+  save(); renderR();
+  showToast(`🗑️ Reserva de ${nombre} cancelada`);
+}
+function quitarE(i){ state.espera.splice(i,1); save(); renderE(); showToast('Eliminado de la espera'); }
+
+// ── PREFERENCIA ESPERA ──
+function selPref(el, val){
+  prefEspera=val;
+  document.querySelectorAll('#pref-grid .pref-opt').forEach(e=>e.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ── MODALES ──
+function openModal(t){
+  editando = null;
+  turnoActual=t; selTurno(t);
+  ['f-nombre','f-tel','f-notas'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-pax').value='3';
+  document.getElementById('f-fecha').value=fechaHoy();
+  document.getElementById('f-fecha').min=fechaHoy();
+  document.getElementById('modal-r-title').textContent='Nueva reserva';
+  document.getElementById('modal-r-btn').textContent='Guardar reserva';
+  zonasSeleccionadas=[]; sugerirZonas();
+  document.getElementById('modal-r').classList.add('on');
+  setTimeout(()=>document.getElementById('f-nombre').focus(),400);
+}
+
+function editarReserva(t, i){
+  const r = state.reservas[t][i];
+  editando = { turno: t, idx: i };
+  turnoActual = t; selTurno(t);
+  document.getElementById('f-nombre').value = r.nombre;
+  document.getElementById('f-tel').value = r.tel || '';
+  document.getElementById('f-notas').value = r.notas || '';
+  document.getElementById('f-pax').value = r.pax;
+  document.getElementById('f-fecha').value = r.fecha || fechaHoy();
+  document.getElementById('f-fecha').min = fechaHoy();
+  document.getElementById('modal-r-title').textContent = `Editar · ${r.nombre}`;
+  document.getElementById('modal-r-btn').textContent = 'Guardar cambios';
+  zonasSeleccionadas = r.zonas ? [...r.zonas] : [];
+  renderGrid();
+  document.getElementById('modal-r').classList.add('on');
+  setTimeout(()=>document.getElementById('f-nombre').focus(),400);
+}
+function openModalEspera(nombre='', pax='2', turno='m'){
+  document.getElementById('e-nombre').value=nombre;
+  document.getElementById('e-pax').value=pax;
+  document.getElementById('e-turno').value=turno;
+  document.getElementById('e-comentario').value='';
+  prefEspera='cualquier sitio';
+  document.querySelectorAll('#pref-grid .pref-opt').forEach((e,i)=>e.classList.toggle('on',i===0));
+  document.getElementById('modal-e-title').textContent='Añadir a la espera';
+  document.getElementById('modal-e').classList.add('on');
+  setTimeout(()=>document.getElementById('e-nombre').focus(),400);
+}
+function closeOverlay(id){
+  document.getElementById(id).classList.remove('on');
+  if(id==='modal-r') editando=null;
+}
+function selTurno(t){ turnoActual=t; document.getElementById('topt-m').classList.toggle('on',t==='m'); document.getElementById('topt-n').classList.toggle('on',t==='n'); }
+
+// ── GUARDAR ──
+function guardarReserva(){
+  const nombre=document.getElementById('f-nombre').value.trim();
+  if(!nombre){ document.getElementById('f-nombre').focus(); return; }
+  const fecha=document.getElementById('f-fecha').value || fechaHoy();
+
+  if(editando){
+    const r = state.reservas[editando.turno][editando.idx];
+    const turnoAnterior = editando.turno;
+    const turnoNuevo = turnoActual;
+    const datosActualizados = {
+      ...r, nombre, fecha,
+      pax: document.getElementById('f-pax').value,
+      tel: document.getElementById('f-tel').value.trim(),
+      notas: document.getElementById('f-notas').value.trim(),
+      zonas: [...zonasSeleccionadas],
+    };
+    if(turnoAnterior === turnoNuevo){
+      state.reservas[turnoNuevo][editando.idx] = datosActualizados;
+    } else {
+      state.reservas[turnoAnterior].splice(editando.idx, 1);
+      state.reservas[turnoNuevo].push(datosActualizados);
+    }
+    editando = null;
+    save(); closeOverlay('modal-r'); renderR();
+    showToast(`✏️ Reserva actualizada · ${fechaDisplay(fecha)}`);
+  } else {
+    state.reservas[turnoActual].push({ nombre, fecha, pax:document.getElementById('f-pax').value, tel:document.getElementById('f-tel').value.trim(), notas:document.getElementById('f-notas').value.trim(), zonas:[...zonasSeleccionadas], ok:false, caducada:false, ts:Date.now() });
+    save(); closeOverlay('modal-r'); renderR();
+    const zl=zonasSeleccionadas.length?` · ${zonasSeleccionadas.map(z=>ZONAS[z]?.label||z).join(' + ')}`:' · Sin zona';
+    showToast(`✓ ${fechaDisplay(fecha)}${zl}`);
+  }
+}
+
+function guardarEspera(){
+  const nombre=document.getElementById('e-nombre').value.trim();
+  if(!nombre){ document.getElementById('e-nombre').focus(); return; }
+  state.espera.push({
+    num: nextNumEspera(),
+    nombre,
+    pax: document.getElementById('e-pax').value,
+    turno: document.getElementById('e-turno').value,
+    hora: horaActual(),
+    preferencia: prefEspera,
+    comentario: document.getElementById('e-comentario').value.trim(),
+    ts: Date.now()
+  });
+  save(); closeOverlay('modal-e'); renderE();
+  showToast(`Nº ${state.espera[state.espera.length-1].num} añadido a la espera`);
+}
+
+// ── VIEWS ──
+function showView(v){
+  document.querySelectorAll('.view').forEach(e=>e.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));
+  document.getElementById('view-'+v).classList.add('on');
+  document.querySelectorAll('.tab')[{reservas:0,mapa:1,espera:2}[v]].classList.add('on');
+}
+function updBadges(){
+  const hoy = fechaHoy();
+  const todas = [...state.reservas.m,...state.reservas.n];
+  const nHoy = todas.filter(r=>esFechaHoy(r.fecha)).length;
+  const nProx = todas.filter(r=>r.fecha&&r.fecha>hoy&&!r.caducada).length;
+  // Badge principal: solo reservas del turno activo hoy (sin caducadas)
+  const turno = turnoProximo();
+  const nTurno = state.reservas[turno].filter(r=>esFechaHoy(r.fecha)&&!r.caducada).length;
+  document.getElementById('bdg-r').textContent = nTurno;
+  document.getElementById('tab-r-label').textContent = turno==='m' ? '☀️ Mediodía' : '🌙 Noche';
+  document.getElementById('bdg-hoy').textContent = nHoy;
+  document.getElementById('bdg-prox').textContent = nProx;
+  document.getElementById('bdg-e').textContent=state.espera.length;
+}
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2800); }
+document.querySelectorAll('.overlay').forEach(o=>{
+  o.addEventListener('click',e=>{
+    if(e.target===o){
+      o.classList.remove('on');
+      if(o.id==='modal-r') editando=null;
+      if(o.id==='modal-ee') editandoEspera=null;
+    }
+  });
+});
+
+// ── INIT ──
+_ultimaFranja = franjaActiva();
+try{ const a=localStorage.getItem('bar_aperturas'); if(a) aperturas=JSON.parse(a); }catch(e){}
+load();
+// Tras cargar, limpiar todo lo que no corresponde a la franja actual
+const franjaAhora = franjaActiva();
+// Borrar reservas de hoy del turno que NO toca
+const turnoFuera = franjaAhora === 'm' ? 'n' : 'm';
+state.reservas[turnoFuera] = state.reservas[turnoFuera].filter(r => !esFechaHoy(r.fecha));
+// Vaciar espera si hay entradas del turno que ya terminó — o simplemente vaciarla toda
+// ya que la espera solo tiene sentido durante el turno activo
+if(state.espera.some(e => e.turno === turnoFuera)){
+  state.espera = [];
+  save();
+}
+// Restaurar estado visual de botones de apertura
+['m','n'].forEach(t=>{
+  if(aperturas[t]){
+    const btn=document.getElementById('btn-abrir-'+t);
+    if(btn){ btn.textContent='✓ Abierto · 15 min en marcha'; btn.classList.add('activo'); }
+  }
+});
+setFecha(); tick(); setInterval(tick,30000);
+renderR(); renderE(); updMapa();
+
+// Demo
+if(!state.reservas.m.length&&!state.reservas.n.length){
+  const hoy = fechaHoy();
+  // Calcular fecha de dentro de 3 días para demo
+  const d3 = new Date(); d3.setDate(d3.getDate()+3);
+  const fecha3 = `${d3.getFullYear()}-${String(d3.getMonth()+1).padStart(2,'0')}-${String(d3.getDate()).padStart(2,'0')}`;
+  const d10 = new Date(); d10.setDate(d10.getDate()+10);
+  const fecha10 = `${d10.getFullYear()}-${String(d10.getMonth()+1).padStart(2,'0')}-${String(d10.getDate()).padStart(2,'0')}`;
+
+  state.reservas.m=[
+    { nombre:'Familia García', pax:'6', tel:'612 000 001', notas:'', zonas:['m1'], fecha:hoy, ok:false, caducada:false, ts:Date.now()-3000 },
+    { nombre:'Marta y Ana',    pax:'2', tel:'', notas:'Cumpleaños 🎂', zonas:['t103'], fecha:hoy, ok:true, caducada:false, ts:Date.now()-2000 },
+    { nombre:'Los Pérez',      pax:'4', tel:'611 222 333', notas:'', zonas:['m4'], fecha:fecha3, ok:false, caducada:false, ts:Date.now()-1000 },
+    { nombre:'Boda aniversario', pax:'8', tel:'699 000 111', notas:'Aniversario 10 años', zonas:['m1'], fecha:fecha10, ok:false, caducada:false, ts:Date.now()-500 },
+  ];
+  state.reservas.n=[
+    { nombre:'Grupo Rodríguez', pax:'5', tel:'622 111 222', notas:'', zonas:['v13','b12','b11'], fecha:hoy, ok:false, caducada:false, ts:Date.now()-1500 },
+    { nombre:'Cena empresa',    pax:'10', tel:'600 999 888', notas:'Menú cerrado', zonas:['t101','t102','t103'], fecha:fecha3, ok:false, caducada:false, ts:Date.now()-100 },
+  ];
+  state.espera=[
+    { num:1, nombre:'Pareja sin reserva', pax:'2', turno:'m', hora:'13:18', preferencia:'cualquier sitio', comentario:'Esperando con algo en barra', cuenta:'', ts:Date.now() },
+    { num:2, nombre:'Los Martínez', pax:'4', turno:'m', hora:'13:20', preferencia:'solo mesa', comentario:'', cuenta:'', ts:Date.now()-100 },
+  ];
+  save(); renderR(); renderE(); updMapa();
+}
+</script>
+</body>
+</html>
