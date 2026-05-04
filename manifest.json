@@ -1,6 +1,6 @@
 {
   "name": "La Chimenea",
-  "short_name": "Chimenea",
+  "short_name": "Reservas",
   "start_url": "/Reservas/",
   "display": "standalone",
   "background_color": "#2D5A3D",
